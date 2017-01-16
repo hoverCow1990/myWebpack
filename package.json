@@ -1,6 +1,7 @@
 {
   "name": "webpack2",
-  "homepage": "file:///E:/study/webpack-Demo2/dist/",
+  "homepage": "http://www.web-jackiee.com/templets/blog/demo/react/demo3/",
+  "locationPage": "file:///E:/study/webpack-Demo2/dist/",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -37,7 +38,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server"
+    "start": "set NODE_ENV=development&&webpack-dev-server",
+    "build": "set NODE_ENV=production&&webpack"
   },
   "author": "",
   "license": "ISC"

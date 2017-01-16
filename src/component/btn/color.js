@@ -11,7 +11,7 @@ ColorBox.prototype = {
 		this.dom.css({"width":200,"height":200,"background-color":"#222"}).on("click",this.fn);
 	},
 	fn(){
-		alert(11);
+		alert(6222);
 	}
 }
 

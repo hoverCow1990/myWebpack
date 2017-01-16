@@ -6,21 +6,25 @@ var webpack 		    =  require("webpack"),
 	fs 				    =  require('fs'),
 	CommonsChunkPlugin  =  webpack.optimize.CommonsChunkPlugin,
 	HtmlWebpackPlugin   =  require('html-webpack-plugin'),         //生成最终的Html5文件
-	ExtractTextPlugin   =  require('extract-text-webpack-plugin'),	//生成css文件
-	CleanWebpackPlugin  =  require('clean-webpack-plugin');   		//清除文件夹
+	ExtractTextPlugin   =  require('extract-text-webpack-plugin'), //生成css文件
+	CleanWebpackPlugin  =  require('clean-webpack-plugin'),   	   //清除文件夹
+	prod 				=  process.env.NODE_ENV === 'production';  //定义环境
+
+
 
 //定义环境路径
-var srcDir              =  path.join(__dirname, './src');     //开发环境
-var distDir             =  path.join(__dirname, './dist');	  //开发测试环境
+var outFileName         =  prod?"build":"dist";
+var srcDir              =  path.join(__dirname, './src');     		//生产环境
+var distDir             =  path.join(__dirname, './',outFileName);	//开发环境
 
 //定义文件路径
 var entryPath           =  path.join(srcDir + "/main");
 var htmlPath            =  path.join(srcDir + "/view");
 
 //定义公共引用路径,这样设置可以在package.json文件中直接用homepage进行定义..
-var homepagePath        =  require(paths.appPackageJson).homepage;
-var homepagePathname    =  homepagePath ? url.parse(homepagePath).pathname : '/';
-var publicPath          =  homepagePathname; 
+var homepagePath        =  prod?require(paths.appPackageJson).homepage:require(paths.appPackageJson).locationPage; 
+var homepagePathname    =  homepagePath ? url.parse(homepagePath).pathname : '/'; 
+var publicPath          =  prod?homepagePath:homepagePathname; 
 
 //入口文件
 var entryDir            =  {}; //entry入口
@@ -36,29 +40,33 @@ fs.readdirSync(htmlPath, 'utf8').forEach((name) => {  		//name为所有文件夹
         template: `${htmlPath}/${name}.html`,				// 需要引入的html文件路径
         filename: `view/${name}.html`,						// 导出文件目录 如下如为/view/index.html  由于
         //minify: true,										// 是否压缩
-        chunks: ["comment",name],							// 需要加载的入口js文件 comment为届时导出的共同js
+        chunks: prod?["comment",name]:[name],				// 需要加载的入口js文件 comment为届时导出的共同js
     }));
 });
 
-var pluginsArr = Array.prototype.slice.call([]).concat(htmlDir);
+var cleanDist = prod?["build"]:["dist"];
 
-pluginsArr = pluginsArr.concat([		
-	new CleanWebpackPlugin(['dist']),					
-	new webpack.HotModuleReplacementPlugin(),				
-	new webpack.optimize.CommonsChunkPlugin({
-		names: "comment",   //['index','login']
-	    filename: 'js/comments-[hash].js',    
-	    chunks: ['index','login'],
-	    minChunks: Infinity //3-5
-	}),
-	new ExtractTextPlugin('css/[name].css',{allChunks: true}),
-	new webpack.optimize.UglifyJsPlugin({   //压缩js
-        compress: {
-          warnings: false
-        }
-    }),
-]);
-
+var pluginsArr = Array.prototype.slice.call([
+		//new CleanWebpackPlugin(cleanDist),
+	]).concat(htmlDir);
+console.log(prod);
+if(prod){
+	pluginsArr = pluginsArr.concat([							
+		new webpack.HotModuleReplacementPlugin(),				
+		new webpack.optimize.CommonsChunkPlugin({
+			names: "comment",   //['index','login']
+		    filename: 'js/comments-[hash].js',    
+		    chunks: ['index','login'],
+		    minChunks: Infinity //3-5
+		}),
+		new ExtractTextPlugin('css/[name].css',{allChunks: true}),
+		new webpack.optimize.UglifyJsPlugin({   //压缩js
+	        compress: {
+	          warnings: false
+	        }
+	    }),
+	]);
+}
 
 var webpackConfig = {
 	devtool: "source-map",
@@ -73,7 +81,7 @@ var webpackConfig = {
 	},
 	plugins : pluginsArr,
 	devServer: {
-	    contentBase: distDir,			//本地服务器所加载的页面所在的目录 **需要$ npm install webpack-dev-server --save-dev
+	    contentBase: "",			//本地服务器所加载的页面所在的目录 **需要$ npm install webpack-dev-server --save-dev
 	    colors: true,					//终端中输出结果为彩色
 	    historyApiFallback: true,
 	    port : 8080,
@@ -91,11 +99,11 @@ var webpackConfig = {
 	        },
 	        {
 	        	test: /\.css$/, 
-	        	loader: ExtractTextPlugin.extract('style', 'css')		   		//**需要 npm install css-loader style-loader html-loader --save-dev
+	        	loader: prod?ExtractTextPlugin.extract('style', 'css'):'style!css',	//**需要 npm install css-loader style-loader html-loader --save-dev
 	       	}, 
 	        {
                 test: /\.less/,
-                loader: ExtractTextPlugin.extract('style', 'css!less')		//需要安装css-loader style-loader html-loader less-loader node-less less extract-text-webpack-plugin
+                loader: prod?ExtractTextPlugin.extract('style', 'css!less'):'style!css!less',	//需要安装css-loader style-loader html-loader less-loader node-less less extract-text-webpack-plugin
             },
             {
                 test: /\.(png|jpe?g)$/,											//**需要 npm install url-loader file-loader --save-dev
@@ -104,17 +112,4 @@ var webpackConfig = {
 		],
     },
 }
-
 module.exports = webpackConfig;
-
-module : {
-    	loaders: [
-	        {
-	        	test: /\.css$/, 
-	        	loader: ExtractTextPlugin.extract('style', 'css'),		   	
-	        {
-                test: /\.less/,
-                loader: ExtractTextPlugin.extract('style', 'css!less'),
-            },
-		],
-},
