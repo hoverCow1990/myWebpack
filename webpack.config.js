@@ -106,15 +106,3 @@ var webpackConfig = {
 }
 
 module.exports = webpackConfig;
-
-module : {
-    	loaders: [
-	        {
-	        	test: /\.css$/, 
-	        	loader: ExtractTextPlugin.extract('style', 'css'),		   	
-	        {
-                test: /\.less/,
-                loader: ExtractTextPlugin.extract('style', 'css!less'),
-            },
-		],
-},
