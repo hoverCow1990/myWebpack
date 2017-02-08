@@ -47,9 +47,8 @@ fs.readdirSync(htmlPath, 'utf8').forEach((name) => {  		//name为所有文件夹
 var cleanDist = prod?["build"]:["dist"];
 
 var pluginsArr = Array.prototype.slice.call([
-		//new CleanWebpackPlugin(cleanDist),
+		new CleanWebpackPlugin(cleanDist),
 	]).concat(htmlDir);
-console.log(prod);
 if(prod){
 	pluginsArr = pluginsArr.concat([							
 		new webpack.HotModuleReplacementPlugin(),				
@@ -63,8 +62,16 @@ if(prod){
 		new webpack.optimize.UglifyJsPlugin({   //压缩js
 	        compress: {
 	          warnings: false
-	        }
+	        },
+	        output: {
+			  comments: false,
+			},
 	    }),
+	    new webpack.DefinePlugin({
+            'process.env': {
+                'NODE_ENV': JSON.stringify('production')
+            }
+        })
 	]);
 }
 
